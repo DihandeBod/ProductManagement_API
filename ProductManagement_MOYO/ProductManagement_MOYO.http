@@ -1,0 +1,6 @@
+@ProductManagement_MOYO_HostAddress = http://localhost:5105
+
+GET {{ProductManagement_MOYO_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
