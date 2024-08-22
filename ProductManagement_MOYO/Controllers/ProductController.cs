@@ -49,14 +49,15 @@ namespace ProductManagement_MOYO.Controllers
 
         [HttpPost]
         [Route("AddProduct")]
-        public async Task<ActionResult<Product>> AddProduct(ProductVM vm)
+        public async Task<ActionResult<ProductLake>> AddProduct(ProductVM vm)
         {
-            var product = new Product()
+            var product = new ProductLake()
             {
                 ProductDescription = vm.ProductDescription,
                 ProductName = vm.ProductName,
                 IsDeleted = false,
-                ProductCategoryId = vm.ProductCategoryId
+                ProductCategoryId = vm.ProductCategoryId,
+                IsApproved = false
             };
 
             try
@@ -75,25 +76,41 @@ namespace ProductManagement_MOYO.Controllers
 
         [HttpPut]
         [Route("UpdateProduct/{id}")]
-        public async Task<ActionResult<Product>> UpdateProduct(int id, ProductVM vm)
+        public async Task<ActionResult<ProductLake>> UpdateProduct(int id, ProductVM vm)
         {
             var product = await _context.Products.FindAsync(id);
             if (product == null)
             {
                 return NotFound();
             }
-
-            product.ProductName = vm.ProductName;
-            product.ProductDescription = vm.ProductDescription;
-            product.ProductCategoryId = vm.ProductCategoryId;
-
-            try
+            // Set new details for product
+            var prodLake = new ProductLake()
             {
-                await _context.SaveChangesAsync();
-            }
-            catch (Exception ex)
+                IsApproved = false,
+                IsDeleted = product.IsDeleted,
+                ProductName = vm.ProductName,
+                ProductDescription = vm.ProductDescription,
+                ProductCategoryId = vm.ProductCategoryId,
+                ProductId = 0
+            };
+            await _context.Lake.AddAsync(prodLake);
+            var result = await _context.SaveChangesAsync();
+
+            if (result > 0)
             {
-                return BadRequest(ex.Message);
+                _context.Products.Remove(product);
+                var deleteResult = await _context.SaveChangesAsync();
+                if (deleteResult > 0)
+                {
+                    try
+                    {
+                        await _context.SaveChangesAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        return BadRequest(ex.Message);
+                    }
+                }
             }
 
             return Ok();
@@ -101,7 +118,7 @@ namespace ProductManagement_MOYO.Controllers
 
         [HttpDelete]
         [Route("DeleteProduct/{id}")]
-        public async Task<ActionResult<Product>> DeleteProduct(int id)
+        public async Task<ActionResult<ProductLake>> DeleteProduct(int id)
         {
             var product = await _context.Products.FindAsync(id);
             if (product == null)

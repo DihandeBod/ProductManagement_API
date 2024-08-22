@@ -1,10 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Text.Json.Serialization;
 
 namespace ProductManagement_MOYO.Models
 {
-    public class Product
+    public class ProductLake
     {
         [Key]
         public int ProductId { get; set; }
@@ -12,10 +10,7 @@ namespace ProductManagement_MOYO.Models
         public string ProductDescription { get; set; }
         public bool IsDeleted { get; set; }
         public bool IsApproved { get; set; }
-        
+
         public int ProductCategoryId { get; set; }
-        // Navigation properties
-        [JsonIgnore]
-        public ProductCategory ProductCategory { get; set; }
     }
 }
