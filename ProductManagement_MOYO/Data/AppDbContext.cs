@@ -26,6 +26,7 @@ namespace ProductManagement_MOYO.Data
         }
 
         public DbSet<Product> Products { get; set; }
+        public DbSet<ProductLake> Lake { get; set; }
         public DbSet<ProductCategory> ProductCategories { get; set; }
         public DbSet<ProductType> ProductTypes { get; set; }
     }
