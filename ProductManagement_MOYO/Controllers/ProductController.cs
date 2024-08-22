@@ -126,15 +126,33 @@ namespace ProductManagement_MOYO.Controllers
                 return NotFound();
             }
 
-            product.IsDeleted = true;
+            var prodLake = new ProductLake()
+            {
+                IsApproved = false,
+                IsDeleted = true,
+                ProductName = product.ProductName,
+                ProductDescription = product.ProductDescription,
+                ProductCategoryId = product.ProductCategoryId,
+                ProductId = 0
+            };
 
-            try
+            await _context.Lake.AddAsync(prodLake);
+            var addResult = await _context.SaveChangesAsync();
+            if (addResult > 0)
             {
-                await _context.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
+                _context.Products.Remove(product);
+                var deleteResult = await _context.SaveChangesAsync();
+                if (deleteResult > 0)
+                {
+                    try
+                    {
+                        await _context.SaveChangesAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        return BadRequest(ex.Message);
+                    }
+                }
             }
 
             return Ok();
