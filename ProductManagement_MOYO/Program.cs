@@ -17,6 +17,11 @@ builder.Services.AddCors(options =>
                .AllowAnyMethod()
                .AllowAnyHeader();
     });
+
+    options.AddPolicy("AllowSpecificOrigin",
+            builder => builder.WithOrigins("http://localhost:4200")
+                              .AllowAnyHeader()
+                              .AllowAnyMethod());
 });
 
 
@@ -38,5 +43,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.UseCors();
+app.UseCors("AllowSpecificOrigin");
 
 app.Run();
