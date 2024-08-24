@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -23,6 +24,7 @@ namespace ProductManagement_MOYO.Controllers
 
         [HttpGet]
         [Route("GetAllProducts")]
+        [Authorize(Roles = "Product Manager,Product Capturer")]
         public async Task<ActionResult<IEnumerable<Product>>> GetAllProducts()
         {
             var products = await _context.Products.ToListAsync();
@@ -36,6 +38,7 @@ namespace ProductManagement_MOYO.Controllers
 
         [HttpGet]
         [Route("GetProductById/{id}")]
+        [Authorize(Roles = "Product Manager,Product Capturer")]
         public async Task<ActionResult<Product>> GetProductById(int id)
         {
             var product = await _context.Products.FindAsync(id);
@@ -49,15 +52,16 @@ namespace ProductManagement_MOYO.Controllers
 
         [HttpPost]
         [Route("AddProduct")]
-        public async Task<ActionResult<ProductLake>> AddProduct(ProductVM vm)
+        [Authorize(Roles = "Product Capturer")]
+        public async Task<ActionResult<Product>> AddProduct(ProductVM vm)
         {
-            var product = new ProductLake()
+            var product = new Product()
             {
                 ProductDescription = vm.ProductDescription,
                 ProductName = vm.ProductName,
                 IsDeleted = false,
                 ProductCategoryId = vm.ProductCategoryId,
-                IsApproved = false
+                IsApproved = true
             };
 
             try
@@ -76,6 +80,7 @@ namespace ProductManagement_MOYO.Controllers
 
         [HttpPut]
         [Route("UpdateProduct/{id}")]
+        [Authorize(Roles = "Product Capturer")]
         public async Task<ActionResult<ProductLake>> UpdateProduct(int id, ProductVM vm)
         {
             var product = await _context.Products.FindAsync(id);
@@ -118,6 +123,7 @@ namespace ProductManagement_MOYO.Controllers
 
         [HttpDelete]
         [Route("DeleteProduct/{id}")]
+        [Authorize(Roles = "Product Manager")]
         public async Task<ActionResult<ProductLake>> DeleteProduct(int id)
         {
             var product = await _context.Products.FindAsync(id);

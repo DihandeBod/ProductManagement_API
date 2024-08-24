@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProductManagement_MOYO.Data;
@@ -20,6 +21,7 @@ namespace ProductManagement_MOYO.Controllers
 
         [HttpGet]
         [Route("GetAllProductsFromLake")]
+        [Authorize(Roles = "Product Manager")]
         public async Task<ActionResult<IEnumerable<ProductLake>>> GetAllProductsFromLake()
         {
             var products = await _context.Lake.Where(x => x.IsDeleted == false).ToListAsync();
@@ -29,6 +31,7 @@ namespace ProductManagement_MOYO.Controllers
 
         [HttpGet]
         [Route("GetDeletedProducts")]
+        [Authorize(Roles = "Product Manager")]
         public async Task<ActionResult<IEnumerable<ProductLake>>> GetDeletedProducts()
         {
             var products = await _context.Lake.Where(x => x.IsDeleted == true).ToListAsync();
@@ -38,6 +41,7 @@ namespace ProductManagement_MOYO.Controllers
 
         [HttpGet]
         [Route("GetProductByIdFromLake/{id}")]
+        [Authorize(Roles = "Product Manager")]
         public async Task<ActionResult<ProductLake>> GetProductByIdFromLake(int id)
         {
             var product = await _context.Lake.FindAsync(id);
@@ -51,6 +55,7 @@ namespace ProductManagement_MOYO.Controllers
 
         [HttpPut]
         [Route("ApproveProductUpdate/{id}")]
+        [Authorize(Roles = "Product Manager")]
         public async Task<ActionResult<ProductLake>> ApproveProductUpdate(int id)
         {
             var update = await _context.Lake.FindAsync(id);
