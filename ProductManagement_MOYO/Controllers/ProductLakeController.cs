@@ -22,11 +22,16 @@ namespace ProductManagement_MOYO.Controllers
         [Route("GetAllProductsFromLake")]
         public async Task<ActionResult<IEnumerable<ProductLake>>> GetAllProductsFromLake()
         {
-            var products = await _context.Lake.ToListAsync();
-            if (products == null || products.Count == 0)
-            {
-                return NotFound();
-            }
+            var products = await _context.Lake.Where(x => x.IsDeleted == false).ToListAsync();
+
+            return products;
+        }
+
+        [HttpGet]
+        [Route("GetDeletedProducts")]
+        public async Task<ActionResult<IEnumerable<ProductLake>>> GetDeletedProducts()
+        {
+            var products = await _context.Lake.Where(x => x.IsDeleted == true).ToListAsync();
 
             return products;
         }
@@ -61,7 +66,7 @@ namespace ProductManagement_MOYO.Controllers
                 ProductDescription = update.ProductDescription,
                 ProductCategoryId = update.ProductCategoryId,
                 IsApproved = true,
-                IsDeleted = update.IsDeleted
+                IsDeleted = false
             };
 
             _context.Products.Add(product);
