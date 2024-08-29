@@ -17,5 +17,8 @@ namespace ProductManagement_MOYO.Models
         // Navigation properties
         [JsonIgnore]
         public ProductCategory ProductCategory { get; set; }
+        [JsonIgnore]
+        public List<OrderLine> OrderLines { get; set; }
+        public List<VendorProduct> VendorProducts { get; set; }
     }
 }
