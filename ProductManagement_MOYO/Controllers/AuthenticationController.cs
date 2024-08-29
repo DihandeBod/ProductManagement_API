@@ -66,8 +66,6 @@ namespace ProductManagement_MOYO.Controllers
 
             if (user == null)
             {
-                string role = "Product Manager";
-
                 // Create a new user
                 user = new UserAccount
                 {
@@ -78,7 +76,7 @@ namespace ProductManagement_MOYO.Controllers
                     OAuthProvider = "GitHub",
                     OAuthId = gitHubUser.Id.ToString(),
                     PasswordHash = null,
-                    Role = role
+                    RoleId = 4
                 };
 
                 _context.Users.Add(user);
@@ -130,14 +128,15 @@ namespace ProductManagement_MOYO.Controllers
                 return BadRequest("User with this email already exists.");
             }
 
-            string role = "Product Manager";
+            int role = 3;
 
             var user = new UserAccount
             {
                 Email = registerDto.Email,
                 Username = registerDto.Username,
                 PasswordHash = CreatePasswordHash(registerDto.Password),
-                Role = role
+                OAuthProvider = "Default",
+                RoleId = role
             };
 
             _context.Users.Add(user);
@@ -177,6 +176,8 @@ namespace ProductManagement_MOYO.Controllers
 
         private string GenerateJwtToken(UserAccount user)
         {
+            var role = _context.Roles.FirstOrDefault(u => u.RoleId == user.RoleId);
+
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]);
             var tokenDescriptor = new SecurityTokenDescriptor
@@ -185,7 +186,7 @@ namespace ProductManagement_MOYO.Controllers
                 {
             new Claim(ClaimTypes.Name, user.Username),
             new Claim(ClaimTypes.Email, user.Email),
-            new Claim(ClaimTypes.Role, user.Role)
+            new Claim(ClaimTypes.Role, role.RoleName)
         }),
                 Expires = DateTime.UtcNow.AddHours(1),
                 Issuer = _configuration["Jwt:Issuer"],

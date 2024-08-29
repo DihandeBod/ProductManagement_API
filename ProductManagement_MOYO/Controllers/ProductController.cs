@@ -1,13 +1,10 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query.Internal;
 using ProductManagement_MOYO.Data;
 using ProductManagement_MOYO.Models;
 using ProductManagement_MOYO.ViewModels;
-using System.Runtime.CompilerServices;
 
 namespace ProductManagement_MOYO.Controllers
 {
@@ -24,7 +21,7 @@ namespace ProductManagement_MOYO.Controllers
 
         [HttpGet]
         [Route("GetAllProducts")]
-        [Authorize(Roles = "Product Manager,Product Capturer")]
+        //[Authorize(Roles = "Product Manager,Product Capturer, Customer")]
         public async Task<ActionResult<IEnumerable<Product>>> GetAllProducts()
         {
             var products = await _context.Products.ToListAsync();
@@ -38,7 +35,7 @@ namespace ProductManagement_MOYO.Controllers
 
         [HttpGet]
         [Route("GetProductById/{id}")]
-        [Authorize(Roles = "Product Manager,Product Capturer")]
+        //[Authorize(Roles = "Product Manager,Product Capturer, Customer")]
         public async Task<ActionResult<Product>> GetProductById(int id)
         {
             var product = await _context.Products.FindAsync(id);
@@ -52,7 +49,7 @@ namespace ProductManagement_MOYO.Controllers
 
         [HttpPost]
         [Route("AddProduct")]
-        [Authorize(Roles = "Product Capturer")]
+        //[Authorize(Roles = "Product Capturer")]
         public async Task<ActionResult<Product>> AddProduct(ProductVM vm)
         {
             var product = new Product()
@@ -64,9 +61,29 @@ namespace ProductManagement_MOYO.Controllers
                 IsApproved = true
             };
 
+            _context.Add(product);
+            await _context.SaveChangesAsync();
+
+            var vendors = _context.Vendors.ToList();
+
+            foreach (var v in vendors)
+            {
+                var vendorProduct = new VendorProduct()
+                {
+                    VendorId = v.VendorId,
+                    Vendor = v,
+                    ProductId = product.ProductId,
+                    Product = product,
+                    Price = 0.00,
+                    QuantityOnHand = 0,
+                    StockLimit = 5,
+                    isActive = false
+                };
+                _context.Add(vendorProduct);
+            }
+
             try
             {
-                _context.Add(product);
                 await _context.SaveChangesAsync();
             }
             catch (Exception ex)
@@ -80,7 +97,7 @@ namespace ProductManagement_MOYO.Controllers
 
         [HttpPut]
         [Route("UpdateProduct/{id}")]
-        [Authorize(Roles = "Product Capturer")]
+        //[Authorize(Roles = "Product Capturer")]
         public async Task<ActionResult<ProductLake>> UpdateProduct(int id, ProductVM vm)
         {
             var product = await _context.Products.FindAsync(id);
@@ -88,7 +105,7 @@ namespace ProductManagement_MOYO.Controllers
             {
                 return NotFound();
             }
-            // Set new details for product
+            
             var prodLake = new ProductLake()
             {
                 IsApproved = false,
@@ -123,7 +140,7 @@ namespace ProductManagement_MOYO.Controllers
 
         [HttpDelete]
         [Route("DeleteProduct/{id}")]
-        [Authorize(Roles = "Product Manager")]
+        //[Authorize(Roles = "Product Manager")]
         public async Task<ActionResult<ProductLake>> DeleteProduct(int id)
         {
             var product = await _context.Products.FindAsync(id);
