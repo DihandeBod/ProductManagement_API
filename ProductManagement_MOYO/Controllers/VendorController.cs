@@ -56,21 +56,10 @@ namespace ProductManagement_MOYO.Controllers
                 return NotFound();
             }
 
-            var update = new VendorProduct()
-            {
-                VendorId = vendorProduct.VendorId,
-                ProductId = vendorProduct.ProductId,
-                Price = configure.Price,
-                QuantityOnHand = configure.stockCount,
-                StockLimit = configure.stockLimit,
-            };
+            vendorProduct.Price = configure.Price;
+            vendorProduct.QuantityOnHand = configure.stockCount;
+            vendorProduct.StockLimit = configure.stockLimit;
 
-            _context.VendorProducts.Add(update);
-            var addResult = await _context.SaveChangesAsync();
-            if (addResult > 0)
-            {
-                _context.Remove(vendorProduct);
-            }
             try
             {
                 await _context.SaveChangesAsync();
@@ -131,6 +120,18 @@ namespace ProductManagement_MOYO.Controllers
             }
 
             return Ok(order);
+        }
+
+        [HttpGet]
+        [Route("GetStatusById/{id}")]
+        public async Task<ActionResult<OrderStatus>> GetStatusById(int id)
+        {
+            var status = _context.OrderStatuses.Where(x => x.OrderStatusId == id).FirstOrDefault();
+            if(status == null)
+            {
+                return NotFound();
+            }
+            return status;
         }
     }
 }

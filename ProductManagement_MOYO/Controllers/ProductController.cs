@@ -24,7 +24,7 @@ namespace ProductManagement_MOYO.Controllers
         //[Authorize(Roles = "Product Manager,Product Capturer, Customer")]
         public async Task<ActionResult<IEnumerable<Product>>> GetAllProducts()
         {
-            var products = await _context.Products.ToListAsync();
+            var products = await _context.Products.Where(x => x.IsDeleted == false).ToListAsync();
             if(products == null || products.Count == 0)
             {
                 return NotFound();
@@ -120,19 +120,9 @@ namespace ProductManagement_MOYO.Controllers
 
             if (result > 0)
             {
-                _context.Products.Remove(product);
-                var deleteResult = await _context.SaveChangesAsync();
-                if (deleteResult > 0)
-                {
-                    try
-                    {
-                        await _context.SaveChangesAsync();
-                    }
-                    catch (Exception ex)
-                    {
-                        return BadRequest(ex.Message);
-                    }
-                }
+                product.IsDeleted = true;
+                product.IsApproved = false;
+                await _context.SaveChangesAsync();
             }
 
             return Ok();

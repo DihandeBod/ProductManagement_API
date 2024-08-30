@@ -25,6 +25,18 @@ namespace ProductManagement_MOYO.Controllers
             _configuration = configuration;
         }
 
+        [HttpGet]
+        [Route("GetUserById/{email}")]
+        public async Task<ActionResult<UserAccount>> GetUserById(string email)
+        {
+            var user = _context.Users.Where(x => x.Email == email).FirstOrDefault();
+            if(user == null)
+            {
+                return NotFound();
+            }
+            return user;
+        }
+
         [HttpPost]
         [Route("Login")]
         public async Task<ActionResult<UserAccount>> Login([FromBody] CodeDto codeDto)
@@ -122,7 +134,7 @@ namespace ProductManagement_MOYO.Controllers
         [HttpPost]
         [Route("Register")]
         public async Task<ActionResult<UserAccount>> Register([FromBody] RegisterDto registerDto)
-        {
+            {
             if (await _context.Users.AnyAsync(u => u.Email == registerDto.Email))
             {
                 return BadRequest("User with this email already exists.");

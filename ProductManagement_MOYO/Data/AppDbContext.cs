@@ -83,10 +83,11 @@ namespace ProductManagement_MOYO.Data
 
             // For roles
             modelBuilder.Entity<Role>().HasData(
-                new Role { RoleId = 1, RoleName = "Product Manager" },
-                new Role { RoleId = 2, RoleName = "Product Capturer" },
-                new Role { RoleId = 3, RoleName = "Vendor" },
-                new Role { RoleId = 4, RoleName = "Customer" }
+                new Role { RoleId = 1, RoleName = "Owner" },
+                new Role { RoleId = 2, RoleName = "Product Manager" },
+                new Role { RoleId = 3, RoleName = "Product Capturer" },
+                new Role { RoleId = 4, RoleName = "Vendor" },
+                new Role { RoleId = 5, RoleName = "Customer" }
             );
 
             // For OrderStatuses
@@ -123,7 +124,9 @@ namespace ProductManagement_MOYO.Data
             // For Users
             modelBuilder.Entity<UserAccount>().HasData(
                 new UserAccount { Id = 1, GitHubId = null, Username = "Dihandb", Email = "dihandb@icloud.com", PasswordHash = "$2a$11$xXKOpnOEuWOixdZqB0SHruQWRYOrPvDtiIMnjYFVcNbrtK3.SFcAK", OAuthProvider = "Default", OAuthId = null, Name = null, RoleId = 3 },
-                new UserAccount { Id = 2, GitHubId = null, Username = "u21451193", Email = "u21451193@tuks.co.za", PasswordHash = "$2a$11$Zmogmt/qZzJ26o2bCSGM1.SbBmJeMa1WQIfpo9eEHUkfpc96xTzVW", OAuthProvider = "Default", OAuthId = null, Name = null, RoleId = 3 }
+                new UserAccount { Id = 2, GitHubId = null, Username = "u21451193", Email = "u21451193@tuks.co.za", PasswordHash = "$2a$11$Zmogmt/qZzJ26o2bCSGM1.SbBmJeMa1WQIfpo9eEHUkfpc96xTzVW", OAuthProvider = "Default", OAuthId = null, Name = null, RoleId = 3 },
+                new UserAccount { Id = 3, GitHubId = null, Username = "Vendor", Email = "vendor@gmail.co.za", PasswordHash = "$2a$11$Zmogmt/qZzJ26o2bCSGM1.SbBmJeMa1WQIfpo9eEHUkfpc96xTzVW", OAuthProvider = "Default", OAuthId = null, Name = null, RoleId = 3 },
+                new UserAccount { Id = 4, GitHubId = null, Username = "Customer", Email = "customer@gmail.co.za", PasswordHash = "$2a$11$Zmogmt/qZzJ26o2bCSGM1.SbBmJeMa1WQIfpo9eEHUkfpc96xTzVW", OAuthProvider = "Default", OAuthId = null, Name = null, RoleId = 4 }
             );
 
             // For Vendors
@@ -136,7 +139,7 @@ namespace ProductManagement_MOYO.Data
             modelBuilder.Entity<VendorProduct>().HasData(
                 new VendorProduct { VendorProductId = 1, VendorId = 1, ProductId = 1, Price = 100, QuantityOnHand = 10, StockLimit = 5, isActive = true },
                 new VendorProduct { VendorProductId = 2, VendorId = 1, ProductId = 2, Price = 200, QuantityOnHand = 10, StockLimit = 5, isActive = true },
-                new VendorProduct { VendorProductId = 3, VendorId = 1, ProductId = 3, Price = 150, QuantityOnHand = 10, StockLimit = 5, isActive = true },
+                new VendorProduct { VendorProductId = 3, VendorId = 1, ProductId = 3, Price = 600, QuantityOnHand = 10, StockLimit = 5, isActive = true },
                 new VendorProduct { VendorProductId = 4, VendorId = 1, ProductId = 4, Price = 400, QuantityOnHand = 10, StockLimit = 5, isActive = true },
                 new VendorProduct { VendorProductId = 5, VendorId = 2, ProductId = 1, Price = 200, QuantityOnHand = 10, StockLimit = 5, isActive = true },
                 new VendorProduct { VendorProductId = 6, VendorId = 2, ProductId = 3, Price = 300, QuantityOnHand = 10, StockLimit = 5, isActive = true }
