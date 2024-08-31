@@ -70,6 +70,7 @@ namespace ProductManagement_MOYO.Controllers
                 catch (Exception ex)
                 {
                     await transaction.RollbackAsync();
+                    transaction.Dispose();
                     return BadRequest(ex.Message);
                 }
             }
@@ -80,67 +81,102 @@ namespace ProductManagement_MOYO.Controllers
         public async Task<ActionResult> AllocateOrder(int orderId, OrderDto orderDto)
         {
             var orderLines = orderDto.orderLines;
-            var vendorDict = new Dictionary<int, double>();
-            var orderLineDict = new Dictionary<int, OrderLine>();
-            var orderToAllocate = _context.Orders.Where(x => x.OrderId == orderId).FirstOrDefault();
+            var vendorDict = new Dictionary<int, double>(); // VendorId, Total Order Cost
+            var vendorProductDict = new Dictionary<int, List<VendorProduct>>(); // VendorId, List of VendorProducts
+            var orderToAllocate = await _context.Orders.Where(x => x.OrderId == orderId).FirstOrDefaultAsync();
 
-            if(orderToAllocate == null)
+            if (orderToAllocate == null)
             {
                 return NotFound("Order not found");
             }
 
-            for (int i = 0; i < orderLines.Count; i++) {
-                var vendorPrices = _context.VendorProducts.Where(x => x.ProductId == orderLines[i].ProductId && x.isActive == true).OrderBy(x => x.Price).ToArray();
+            var vendors = await _context.Vendors.ToListAsync(); // Materialize vendors list
+            foreach (var vendor in vendors)
+            {
+                double totalCost = 0;
+                bool canFulfill = true;
+                var vendorProducts = new List<VendorProduct>();
 
-                for (int j = 0; j < vendorPrices.Length; j++)
+                foreach (var orderLine in orderLines)
                 {
-                    double orderSum;
-                    if (vendorPrices[j].QuantityOnHand >= orderLines[i].Quantity)
-                    {
-                        if (vendorDict.TryGetValue(vendorPrices[j].VendorId, out orderSum))
-                        {
-                            orderSum += vendorPrices[j].Price * orderLines[i].Quantity;
-                            vendorDict[vendorPrices[j].VendorId] = orderSum;
-                        }
-                        else
-                        {
-                            orderSum = vendorPrices[j].Price * orderLines[i].Quantity;
-                            vendorDict.Add(vendorPrices[j].VendorId, orderSum);
-                        }
+                    var vendorProduct = await _context.VendorProducts
+                        .Where(x => x.VendorId == vendor.VendorId && x.ProductId == orderLine.ProductId && x.isActive == true)
+                        .FirstOrDefaultAsync(); // Materialize each vendorProduct
 
-                        if (!orderLineDict.ContainsKey(vendorPrices[j].VendorId))
-                        {
-                            orderLineDict.Add(vendorPrices[j].VendorId, orderLines[i]);
-                        }
+                    if (vendorProduct == null || vendorProduct.QuantityOnHand < orderLine.Quantity)
+                    {
+                        canFulfill = false;
+                        break;
                     }
+
+                    totalCost += vendorProduct.Price * orderLine.Quantity;
+                    vendorProducts.Add(vendorProduct);
+                }
+
+                if (canFulfill)
+                {
+                    vendorDict[vendor.VendorId] = totalCost;
+                    vendorProductDict[vendor.VendorId] = vendorProducts;
                 }
             }
 
-            if(vendorDict.Count == 0)
+            if (vendorDict.Count == 0)
             {
-                return BadRequest("No vendors available with sufficient inventory");
+                return BadRequest("No vendors available with sufficient inventory to fulfill the entire order.");
             }
-            // Get the value of the lowest order cost
-            var orderedDict = vendorDict.OrderBy(x => x.Value).ToArray();
+
+            // Get the vendor with the lowest total order cost
+            var bestVendorId = vendorDict.OrderBy(x => x.Value).First().Key;
+            var bestVendorProducts = vendorProductDict[bestVendorId];
 
             // Allocate order
-            orderToAllocate.VendorId = orderedDict[0].Key;
-            orderToAllocate.OrderTotal = orderedDict[0].Value;
+            orderToAllocate.VendorId = bestVendorId;
+            orderToAllocate.OrderTotal = vendorDict[bestVendorId];
             orderToAllocate.isAssigned = true;
             orderToAllocate.OrderStatusId = 2;
 
-            // Subtract order quantity
-            var selectedVendorProduct = _context.VendorProducts.Where(x => x.VendorId == orderedDict[0].Key && x.ProductId == orderLineDict[orderedDict[0].Key].ProductId).FirstOrDefault();
-            if (selectedVendorProduct != null)
+            // Subtract order quantity from vendor's inventory
+            foreach (var orderLine in orderLines)
             {
-                selectedVendorProduct.QuantityOnHand -= orderLineDict[orderedDict[0].Key].Quantity;
+                var vendorProduct = bestVendorProducts.FirstOrDefault(x => x.ProductId == orderLine.ProductId);
+                if (vendorProduct != null)
+                {
+                    vendorProduct.QuantityOnHand -= orderLine.Quantity;
+                }
             }
 
             await _context.SaveChangesAsync();
 
             return Ok();
-
         }
-        
+
+        [HttpGet]
+        [Route("ViewCustomerOrdersById/{id}")]
+        public async Task<ActionResult<IEnumerable<Order>>> ViewOrdersById(int id)
+        {
+            var orders = await _context.Orders.Where(x => x.UserId == id).ToListAsync();
+
+            if (orders == null || orders.Count == 0)
+            {
+                return NotFound();
+            }
+
+            return Ok(orders);
+        }
+
+        [HttpGet]
+        [Route("GetOrderDetails/{id}")]
+        public async Task<ActionResult<IEnumerable<OrderLine>>> getOrderDetails(int id)
+        {
+            var orderDetails = await _context.OrderLines.Where(x => x.OrderId == id).ToListAsync();
+            if (orderDetails.Count == 0 || orderDetails == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(orderDetails);
+        }
+
+
     }
 }

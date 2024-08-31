@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using ProductManagement_MOYO.Data;
+using ProductManagement_MOYO.Services;
 using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text;
@@ -107,6 +108,8 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
+
+builder.Services.AddScoped<DataLakeService>();
 
 var app = builder.Build();
 

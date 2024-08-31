@@ -19,10 +19,22 @@ namespace ProductManagement_MOYO.Controllers
             _context = context;
         }
 
+
+        /*
+         * 
+         * 
+         * MAYBE NOT NEEDED CHECK FRONTEND CODE FIRST THOUGH. DATA LAKE DONE ON AZURE NOW
+         * 
+         * 
+         * */
+
+
+
+
         [HttpGet]
         [Route("GetAllProductsFromLake")]
         //[Authorize(Roles = "Product Manager")]
-        public async Task<ActionResult<IEnumerable<ProductLake>>> GetAllProductsFromLake()
+        public async Task<ActionResult<IEnumerable<ProductLake>>> GetAllProductsFromLake() // This needs changing
         {
             var products = await _context.Lake.Where(x => x.IsDeleted == false).ToListAsync();
 
@@ -32,7 +44,7 @@ namespace ProductManagement_MOYO.Controllers
         [HttpGet]
         [Route("GetDeletedProducts")]
         //[Authorize(Roles = "Product Manager")]
-        public async Task<ActionResult<IEnumerable<ProductLake>>> GetDeletedProducts()
+        public async Task<ActionResult<IEnumerable<ProductLake>>> GetDeletedProducts() // This needs changing
         {
             var products = await _context.Lake.Where(x => x.IsDeleted == true).ToListAsync();
 
@@ -42,7 +54,7 @@ namespace ProductManagement_MOYO.Controllers
         [HttpGet]
         [Route("GetProductByIdFromLake/{id}")]
         //[Authorize(Roles = "Product Manager")]
-        public async Task<ActionResult<ProductLake>> GetProductByIdFromLake(int id)
+        public async Task<ActionResult<ProductLake>> GetProductByIdFromLake(int id) // This might have to change
         {
             var product = await _context.Lake.FindAsync(id);
             if (product == null)
@@ -56,7 +68,7 @@ namespace ProductManagement_MOYO.Controllers
         [HttpPut]
         [Route("ApproveProductUpdate/{id}")]
         //[Authorize(Roles = "Product Manager")]
-        public async Task<ActionResult<ProductLake>> ApproveProductUpdate(int id)
+        public async Task<ActionResult<ProductLake>> ApproveProductUpdate(int id) // This needs changing or MERGING with approve product in ProductsController
         {
             var update = await _context.Lake.FindAsync(id);
             if (update == null)
