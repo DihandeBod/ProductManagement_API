@@ -2,9 +2,12 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using ProductManagement_MOYO.Data;
 using ProductManagement_MOYO.Models;
+using ProductManagement_MOYO.Services;
 using ProductManagement_MOYO.ViewModels;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace ProductManagement_MOYO.Controllers
 {
@@ -13,10 +16,12 @@ namespace ProductManagement_MOYO.Controllers
     public class ProductLakeController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly DataLakeService _dataLakeService;
         
-        public ProductLakeController(AppDbContext context)
+        public ProductLakeController(AppDbContext context, DataLakeService dataLakeService)
         {
             _context = context;
+            _dataLakeService = dataLakeService;
         }
 
 
@@ -34,91 +39,83 @@ namespace ProductManagement_MOYO.Controllers
         [HttpGet]
         [Route("GetAllProductsFromLake")]
         //[Authorize(Roles = "Product Manager")]
-        public async Task<ActionResult<IEnumerable<ProductLake>>> GetAllProductsFromLake() // This needs changing
+        public async Task<ActionResult<IEnumerable<ProductLake>>> GetAllProductsFromLake()
         {
-            var products = await _context.Lake.Where(x => x.IsDeleted == false).ToListAsync();
+            var products = new List<ProductLake>();
+            var files = await _dataLakeService.GetFilesAsync($"products/updates/");
+
+            foreach (var file in files)
+            {
+                var fileContent = await _dataLakeService.ReadFileAsync(file);
+
+                // Deserialize the single product object from the file
+                var product = JsonConvert.DeserializeObject<ProductLake>(fileContent);
+
+                if (product != null && !product.IsDeleted)
+                {
+                    products.Add(product);
+                }
+            }
 
             return products;
         }
+
 
         [HttpGet]
         [Route("GetDeletedProducts")]
         //[Authorize(Roles = "Product Manager")]
-        public async Task<ActionResult<IEnumerable<ProductLake>>> GetDeletedProducts() // This needs changing
+        public async Task<ActionResult<IEnumerable<ProductLake>>> GetDeletedProducts()
         {
-            var products = await _context.Lake.Where(x => x.IsDeleted == true).ToListAsync();
+            var products = new List<ProductLake>();
+            var files = await _dataLakeService.GetFilesAsync($"products/deleted/");
+
+            foreach (var file in files)
+            {
+                var fileContent = await _dataLakeService.ReadFileAsync(file);
+
+                // Deserialize the single product object from the file
+                var product = JsonConvert.DeserializeObject<ProductLake>(fileContent);
+
+                if (product != null && product.IsDeleted)
+                {
+                    products.Add(product);
+                }
+            }
 
             return products;
         }
 
+
         [HttpGet]
         [Route("GetProductByIdFromLake/{id}")]
         //[Authorize(Roles = "Product Manager")]
-        public async Task<ActionResult<ProductLake>> GetProductByIdFromLake(int id) // This might have to change
+        public async Task<ActionResult<ProductLake>> GetProductByIdFromLake(int id)
         {
-            var product = await _context.Lake.FindAsync(id);
-            if (product == null)
+            string fileName = $"{id}.json"; 
+
+            string updatedFolder = "updates";
+            var updatedFileContent = await _dataLakeService.ReadFileAsync($"products/{updatedFolder}/{fileName}");
+
+            ProductLake product = null;
+
+            if (updatedFileContent != null)
             {
-                return NotFound();
+                product = JsonConvert.DeserializeObject<ProductLake>(updatedFileContent);
+                return product;
             }
 
-            return product;
+            string deletedFolder = "deleted";
+            var deletedFileContent = await _dataLakeService.ReadFileAsync($"products/{deletedFolder}/{fileName}");
+
+            if (deletedFileContent != null)
+            {
+                product = JsonConvert.DeserializeObject<ProductLake>(deletedFileContent);
+                return product;
+            }
+
+            return NotFound("No such file found");
         }
 
-        [HttpPut]
-        [Route("ApproveProductUpdate/{id}")]
-        //[Authorize(Roles = "Product Manager")]
-        public async Task<ActionResult<ProductLake>> ApproveProductUpdate(int id) // This needs changing or MERGING with approve product in ProductsController
-        {
-            var update = await _context.Lake.FindAsync(id);
-            if (update == null)
-            {
-                return NotFound();
-            }
 
-            var product = new Product()
-            {
-                ProductId = 0,
-                ProductName = update.ProductName,
-                ProductDescription = update.ProductDescription,
-                ProductCategoryId = update.ProductCategoryId,
-                IsApproved = true,
-                IsDeleted = false
-            };
-
-            var updatedVendorProducts = _context.VendorProducts.Where(x => x.ProductId == product.ProductId).ToList();
-
-            foreach(var updatedVendorProduct in updatedVendorProducts)
-            {
-                var updatedVP = new VendorProduct()
-                {
-                    Product = product,
-                    isActive = true
-                };
-                _context.Update(updatedVP);
-                await _context.SaveChangesAsync();
-            }
-
-            _context.Products.Add(product);
-            var addResult = await _context.SaveChangesAsync();
-            if (addResult > 0)
-            {
-                _context.Lake.Remove(update);
-                var saveResult = await _context.SaveChangesAsync();
-                if (saveResult > 0)
-                {
-                    try
-                    {
-                        await _context.SaveChangesAsync();
-                    }
-                    catch (Exception ex)
-                    {
-                        return BadRequest(ex.Message);
-                    }
-                }
-            }
-
-            return Ok();
-        }
     }
 }

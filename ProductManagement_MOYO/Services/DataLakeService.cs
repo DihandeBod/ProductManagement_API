@@ -105,5 +105,44 @@ namespace ProductManagement_MOYO.Services
             }
         }
 
+        public async Task<List<string>> GetFilesAsync(string directoryName)
+        {
+            var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
+            var blobItems = containerClient.GetBlobsAsync(prefix: directoryName);
+            var files = new List<string>();
+
+            await foreach (var blobItem in blobItems)
+            {
+                files.Add(blobItem.Name);
+            }
+
+            return files;
+        }
+
+        public async Task<string> ReadFileAsync(string blobName)
+        {
+            var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
+            var blobClient = containerClient.GetBlobClient(blobName);
+
+            try
+            {
+                var response = await blobClient.DownloadAsync();
+                using (var reader = new StreamReader(response.Value.Content))
+                {
+                    return await reader.ReadToEndAsync();
+                }
+            }
+            catch (Azure.RequestFailedException ex) when (ex.Status == 404)
+            {
+                // Blob not found
+                return null;
+            }
+            catch (Exception)
+            {
+                // Handle other exceptions or rethrow if necessary
+                throw;
+            }
+        }
+
     }
 }
