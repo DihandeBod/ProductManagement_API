@@ -34,6 +34,7 @@ namespace ProductManagement_MOYO.Controllers
 
         [HttpGet]
         [Route("VendorProducts/{id}")]
+        [Authorize(Roles = "Vendor")]
         public async Task<ActionResult<IEnumerable<VendorProduct>>> GetallVendorProducts(int id)
         {
             var products = await _context.VendorProducts.Where(x => x.VendorId == id).ToListAsync();
@@ -47,7 +48,8 @@ namespace ProductManagement_MOYO.Controllers
 
         [HttpPut]
         [Route("ConfigureProduct")]
-        //[Authorize("Vendor")]
+        [Authorize(Roles = "Vendor")]
+
         public async Task<ActionResult<Product>> ConfigureProduct(VendorConfigureDto configure)
         {
             var vendorProduct = _context.VendorProducts.Where(x => x.ProductId == configure.ProductId && x.VendorId == configure.VendorId).FirstOrDefault();
@@ -74,6 +76,7 @@ namespace ProductManagement_MOYO.Controllers
 
         [HttpGet]
         [Route("ViewAllAllocatedOrders/{id}")]
+        [Authorize(Roles = "Vendor")]
         public async Task<ActionResult<Order>> ViewAllAllocatedOrders(int id)
         {
             var orders = _context.Orders.Where(x => x.VendorId == id && x.isAssigned == true);
@@ -87,6 +90,7 @@ namespace ProductManagement_MOYO.Controllers
 
         [HttpPut]
         [Route("UpdateOrderStatus/{id}")]
+        [Authorize(Roles = "Vendor")]
         public async Task<ActionResult<Order>> UpdateOrderStatus(int id)
         {
             var order = _context.Orders.Where(x => x.OrderId == id).FirstOrDefault();

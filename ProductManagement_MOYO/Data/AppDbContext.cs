@@ -123,7 +123,7 @@ namespace ProductManagement_MOYO.Data
 
             // For Users
             modelBuilder.Entity<UserAccount>().HasData(
-                new UserAccount { Id = 1, GitHubId = null, Username = "Dihandb", Email = "dihandb@icloud.com", PasswordHash = "$2a$11$xXKOpnOEuWOixdZqB0SHruQWRYOrPvDtiIMnjYFVcNbrtK3.SFcAK", OAuthProvider = "Default", OAuthId = null, Name = null, RoleId = 3 },
+                new UserAccount { Id = 1, GitHubId = null, Username = "Dihandb", Email = "dihandb@icloud.com", PasswordHash = "$2a$11$xXKOpnOEuWOixdZqB0SHruQWRYOrPvDtiIMnjYFVcNbrtK3.SFcAK", OAuthProvider = "Default", OAuthId = null, Name = null, RoleId = 1 },
                 new UserAccount { Id = 2, GitHubId = null, Username = "u21451193", Email = "u21451193@tuks.co.za", PasswordHash = "$2a$11$Zmogmt/qZzJ26o2bCSGM1.SbBmJeMa1WQIfpo9eEHUkfpc96xTzVW", OAuthProvider = "Default", OAuthId = null, Name = null, RoleId = 3 },
                 new UserAccount { Id = 3, GitHubId = null, Username = "Vendor", Email = "vendor@gmail.co.za", PasswordHash = "$2a$11$Zmogmt/qZzJ26o2bCSGM1.SbBmJeMa1WQIfpo9eEHUkfpc96xTzVW", OAuthProvider = "Default", OAuthId = null, Name = null, RoleId = 3 },
                 new UserAccount { Id = 4, GitHubId = null, Username = "Customer", Email = "customer@gmail.co.za", PasswordHash = "$2a$11$Zmogmt/qZzJ26o2bCSGM1.SbBmJeMa1WQIfpo9eEHUkfpc96xTzVW", OAuthProvider = "Default", OAuthId = null, Name = null, RoleId = 4 }
