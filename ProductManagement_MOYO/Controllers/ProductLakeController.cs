@@ -24,22 +24,34 @@ namespace ProductManagement_MOYO.Controllers
             _dataLakeService = dataLakeService;
         }
 
-
-        /*
-         * 
-         * 
-         * MAYBE NOT NEEDED CHECK FRONTEND CODE FIRST THOUGH. DATA LAKE DONE ON AZURE NOW
-         * 
-         * 
-         * */
-
-
-
-
         [HttpGet]
         [Route("GetAllProductsFromLake")]
-        //[Authorize(Roles = "Product Manager")]
+        [Authorize(Roles = "Product Manager")]
         public async Task<ActionResult<IEnumerable<ProductLake>>> GetAllProductsFromLake()
+        {
+            var products = new List<ProductLake>();
+            var files = await _dataLakeService.GetFilesAsync($"products/allProducts/");
+
+            foreach (var file in files)
+            {
+                var fileContent = await _dataLakeService.ReadFileAsync(file);
+
+                // Deserialize the single product object from the file
+                var product = JsonConvert.DeserializeObject<ProductLake>(fileContent);
+
+                if (product != null && !product.IsDeleted)
+                {
+                    products.Add(product);
+                }
+            }
+
+            return products;
+        }
+
+        [HttpGet]
+        [Route("GetAllUpdatesFromLake")]
+        [Authorize(Roles = "Product Manager")]
+        public async Task<ActionResult<IEnumerable<ProductLake>>> GetAllUpdatesFromLake()
         {
             var products = new List<ProductLake>();
             var files = await _dataLakeService.GetFilesAsync($"products/updates/");
@@ -61,9 +73,10 @@ namespace ProductManagement_MOYO.Controllers
         }
 
 
+
         [HttpGet]
         [Route("GetDeletedProducts")]
-        //[Authorize(Roles = "Product Manager")]
+        [Authorize(Roles = "Product Manager")]
         public async Task<ActionResult<IEnumerable<ProductLake>>> GetDeletedProducts()
         {
             var products = new List<ProductLake>();
@@ -88,7 +101,7 @@ namespace ProductManagement_MOYO.Controllers
 
         [HttpGet]
         [Route("GetProductByIdFromLake/{id}")]
-        //[Authorize(Roles = "Product Manager")]
+        [Authorize(Roles = "Product Manager")]
         public async Task<ActionResult<ProductLake>> GetProductByIdFromLake(int id)
         {
             string fileName = $"{id}.json"; 

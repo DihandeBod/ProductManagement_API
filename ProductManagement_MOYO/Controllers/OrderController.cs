@@ -21,7 +21,7 @@ namespace ProductManagement_MOYO.Controllers
 
         [HttpPost]
         [Route("PlaceOrder")]
-        //[Authorize("Customer")]
+        [Authorize(Roles = "Customer")]
         public async Task<ActionResult<Order>> PlaceOrder(OrderDto orderDto)
         {
             using (var transaction = await _context.Database.BeginTransactionAsync())
@@ -152,6 +152,7 @@ namespace ProductManagement_MOYO.Controllers
 
         [HttpGet]
         [Route("ViewCustomerOrdersById/{id}")]
+        [Authorize(Roles = "Customer, Vendor")]
         public async Task<ActionResult<IEnumerable<Order>>> ViewOrdersById(int id)
         {
             var orders = await _context.Orders.Where(x => x.UserId == id).ToListAsync();
@@ -166,6 +167,7 @@ namespace ProductManagement_MOYO.Controllers
 
         [HttpGet]
         [Route("GetOrderDetails/{id}")]
+        [Authorize(Roles = "Customer, Vendor")]
         public async Task<ActionResult<IEnumerable<OrderLine>>> getOrderDetails(int id)
         {
             var orderDetails = await _context.OrderLines.Where(x => x.OrderId == id).ToListAsync();

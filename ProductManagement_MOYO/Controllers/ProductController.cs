@@ -26,7 +26,7 @@ namespace ProductManagement_MOYO.Controllers
 
         [HttpGet]
         [Route("GetAllProducts")]
-        //[Authorize(Roles = "Product Manager,Product Capturer, Customer")]
+        [Authorize(Roles = "Product Manager,Product Capturer, Customer, Vendor")]
         public async Task<ActionResult<IEnumerable<Product>>> GetAllProducts()
         {
             var products = await _context.Products.Where(x => x.IsDeleted == false && x.IsApproved == true).ToListAsync();
@@ -40,7 +40,7 @@ namespace ProductManagement_MOYO.Controllers
 
         [HttpGet]
         [Route("GetProductById/{id}")]
-        //[Authorize(Roles = "Product Manager,Product Capturer, Customer")]
+        [Authorize(Roles = "Product Manager,Product Capturer, Customer, Vendor")]
         public async Task<ActionResult<Product>> GetProductById(int id)
         {
             var product = await _context.Products.FindAsync(id);
@@ -54,7 +54,7 @@ namespace ProductManagement_MOYO.Controllers
 
         [HttpPost]
         [Route("AddProduct")]
-        //[Authorize(Roles = "Product Capturer")]
+        [Authorize(Roles = "Product Capturer")]
         public async Task<ActionResult<Product>> AddProduct(ProductVM vm)
         {
             var product = new Product
@@ -63,7 +63,7 @@ namespace ProductManagement_MOYO.Controllers
                 ProductName = vm.ProductName,
                 IsDeleted = false,
                 ProductCategoryId = vm.ProductCategoryId,
-                IsApproved = false // Initially not approved
+                IsApproved = true
             };
 
             _context.Add(product);
@@ -87,7 +87,7 @@ namespace ProductManagement_MOYO.Controllers
                     Price = 0.00,
                     QuantityOnHand = 0,
                     StockLimit = 5,
-                    isActive = false
+                    isActive = true
                 };
                 _context.Add(vendorProduct);
             }
@@ -106,7 +106,7 @@ namespace ProductManagement_MOYO.Controllers
 
         [HttpPut]
         [Route("UpdateProduct/{id}")]
-        //[Authorize(Roles = "Product Capturer")]
+        [Authorize(Roles = "Product Capturer")]
         public async Task<ActionResult> UpdateProduct(int id, ProductVM vm)
         {
             var product = await _context.Products.FindAsync(id);
@@ -133,7 +133,7 @@ namespace ProductManagement_MOYO.Controllers
 
         [HttpPost]
         [Route("ApproveProduct/{id}")]
-        //[Authorize(Roles = "Product Manager")]
+        [Authorize(Roles = "Product Manager")]
         public async Task<ActionResult> ApproveProduct(int id)
         {
             bool isDeletedFile = false;
@@ -170,8 +170,8 @@ namespace ProductManagement_MOYO.Controllers
                 // Update the product in SQL Server based on the flag
                 if (isDeletedFile)
                 {
-                    productToUpdate.IsDeleted = true;
-                    productToUpdate.IsApproved = false;
+                    productToUpdate.IsDeleted = false;
+                    productToUpdate.IsApproved = true;
 
                 }
                 else
@@ -206,10 +206,11 @@ namespace ProductManagement_MOYO.Controllers
 
                     foreach (var vp in vendorProductsToUpdate)
                     {
-                        vp.isActive = false;
+                        vp.isActive = true;
                     }
 
                     await _context.SaveChangesAsync();
+                    await _dataLakeService.DeleteFileAsync($"products/deleted/{id}.json");
                 }
 
                 return Ok(productToUpdate);
@@ -220,7 +221,7 @@ namespace ProductManagement_MOYO.Controllers
 
         [HttpDelete]
         [Route("DeleteProduct/{id}")]
-        //[Authorize(Roles = "Product Manager")]
+        [Authorize(Roles = "Product Manager")]
         public async Task<ActionResult> DeleteProduct(int id)
         {
             var product = await _context.Products.FindAsync(id);
@@ -236,6 +237,17 @@ namespace ProductManagement_MOYO.Controllers
             var productStream = new MemoryStream(Encoding.UTF8.GetBytes(productJson));
             await _dataLakeService.UploadFileAsync($"products/deleted/{product.ProductId}.json", productStream);
 
+            var vendorProductsToUpdate = await _context.VendorProducts.Where(x => x.ProductId == id).ToListAsync();
+            if (vendorProductsToUpdate == null)
+            {
+                return NotFound();
+            }
+
+            foreach (var vp in vendorProductsToUpdate)
+            {
+                vp.isActive = false;
+            }
+
             await _context.SaveChangesAsync();
 
             return Ok();
@@ -243,7 +255,7 @@ namespace ProductManagement_MOYO.Controllers
 
         [HttpPost]
         [Route("SyncAllProductsToDataLake")]
-        //[Authorize(Roles = "Product Manager")]
+        [Authorize(Roles = "Owner")]
         public async Task<ActionResult> SyncAllProductsToDataLake()
         {
             int count = 0;
